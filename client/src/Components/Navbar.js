@@ -5,7 +5,7 @@ import { AuthContext } from '../contexts/AuthProvider'
 import PrimaryButton from '../Components/Button/PrimaryButton'
 
 const Navbar = () => {
-  const { user } = useContext(AuthContext)
+  const { user, logout } = useContext(AuthContext)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   return (
@@ -18,7 +18,7 @@ const Navbar = () => {
           <span className='ml-3 text-2xl font-bold '>Aircnc</span>
         </Link>
         <nav className='md:ml-auto flex flex-wrap items-center text-base justify-center'>
-          {user?.email ? (
+          {user ?.email ? (
             <>
               <div className='relative inline-block '>
                 <button
@@ -61,7 +61,7 @@ const Navbar = () => {
                     </Link>
 
                     <hr className='border-gray-200' />
-                    <div className='flex items-center cursor-pointer p-3 text-sm text-gray-600 capitalize transition-colors duration-200 transform  hover:bg-gray-100 '>
+                    <div onClick={logout} className='flex items-center cursor-pointer p-3 text-sm text-gray-600 capitalize transition-colors duration-200 transform  hover:bg-gray-100 '>
                       <svg
                         className='w-5 h-5 mx-1'
                         viewBox='0 0 24 24'
@@ -81,17 +81,17 @@ const Navbar = () => {
               </div>
             </>
           ) : (
-            <>
-              <Link to='/login' className='mr-5 hover:text-green-600'>
-                Login
+              <>
+                <Link to='/login' className='mr-5 hover:text-green-600'>
+                  Login
               </Link>
-              <Link to='/signup' className='mr-5'>
-                <PrimaryButton classes='rounded-full px-2 py-1'>
-                  Signup
+                <Link to='/signup' className='mr-5'>
+                  <PrimaryButton classes='rounded-full px-2 py-1'>
+                    Signup
                 </PrimaryButton>
-              </Link>
-            </>
-          )}
+                </Link>
+              </>
+            )}
         </nav>
       </div>
     </header>

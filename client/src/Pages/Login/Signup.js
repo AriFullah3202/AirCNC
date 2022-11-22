@@ -1,9 +1,64 @@
-import React from 'react'
-
+import React, { useContext, useState } from 'react'
+import { useForm, } from 'react-hook-form';
+import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
 import PrimaryButton from '../../Components/Button/PrimaryButton'
+import { AuthContext } from '../../contexts/AuthProvider';
+import SmallSpinner from '../../Components/Spinner/SmallSpinner';
 
 const Signup = () => {
+  const { createUser, updateUserProfile, verifyEmail, loading, setLoading, signInWithGoogle } = useContext(AuthContext)
+  //ekhane react-hook-form install kore oi hook ti use kora holo
+  const { register, formState: { errors }, handleSubmit } = useForm();
+  const [signUpError, setSignUPError] = useState('')
+
+
+
+  const handleSignUp = (data) => {
+    const { name, email, image, password } = data
+    console.log(name, email)
+    //start for hosting for image
+    const formData = new FormData()
+    formData.append('image', image[0])
+    console.log(formData)
+
+    const uri = `https://api.imgbb.com/1/upload?key=${process.env.REACT_APP_imgbb_key}`
+    fetch(uri, {
+      method: 'POST',
+      body: formData
+    }).then(res => res.json())
+      .then(data => {
+        console.log(data)
+        createUser(email, password)
+          .then(result => {
+            updateUserProfile(name, data.data.url)
+              .then(res => {
+                verifyEmail().then(res => {
+                  toast.susccess('please check your email verification link')
+                })
+              })
+              .catch(err => { })
+
+          })
+          .catch(err => { console.log(err) })
+      })
+      .catch(err => {
+        console.log(err)
+        setSignUPError(err.message)
+      })
+    //end for hosting image
+  }
+
+  const handleGoogleSingIN = () => {
+    signInWithGoogle().then(result => {
+      console.log(result.user)
+    })
+      .catch(err => {
+        console.log(err)
+      })
+  }
+
+
   return (
     <div className='flex justify-center items-center pt-8'>
       <div className='flex flex-col max-w-md p-6 rounded-md sm:p-10 bg-gray-100 text-gray-900'>
@@ -12,6 +67,7 @@ const Signup = () => {
           <p className='text-sm text-gray-400'>Create a new account</p>
         </div>
         <form
+          onSubmit={handleSubmit(handleSignUp)}
           noValidate=''
           action=''
           className='space-y-12 ng-untouched ng-pristine ng-valid'
@@ -25,11 +81,13 @@ const Signup = () => {
                 type='text'
                 name='name'
                 id='name'
-                required
+                {...register('name', { required: "Your name at least 6 charcter or longer", minLength: { value: 6, message: 'Your name at least 6 charactars or longer' } })}
                 placeholder='Enter Your Name Here'
                 className='w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-green-500 bg-gray-200 text-gray-900'
                 data-temp-mail-org='0'
               />
+              {errors.name && <p className="text-red-400">{errors.name ?.message}</p>}
+
             </div>
             <div>
               <label htmlFor='image' className='block mb-2 text-sm'>
@@ -40,15 +98,15 @@ const Signup = () => {
                 id='image'
                 name='image'
                 accept='image/*'
-                required
-              />
+                {...register('image', { required: "Your photo requird" })} />
+              {errors.image && <p className="text-red-400">{errors.image ?.message}</p>}
             </div>
             <div>
               <label htmlFor='email' className='block mb-2 text-sm'>
                 Email address
               </label>
               <input
-                required
+                {...register("email", { required: "Email is required" })}
                 type='email'
                 name='email'
                 id='email'
@@ -56,6 +114,8 @@ const Signup = () => {
                 className='w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-green-500 bg-gray-200 text-gray-900'
                 data-temp-mail-org='0'
               />
+              {errors.email && <p className="text-red-400">{errors.email ?.message}</p>}
+
             </div>
             <div>
               <div className='flex justify-between mb-2'>
@@ -67,10 +127,13 @@ const Signup = () => {
                 type='password'
                 name='password'
                 id='password'
-                required
+                {...register('password', { required: "password is requied", minLength: { value: 6, message: 'password at least 6 charactars or longer' } })}
+
                 placeholder='*******'
                 className='w-full px-3 py-2 border rounded-md border-gray-300 bg-gray-200 focus:outline-green-500 text-gray-900'
               />
+              {errors.password && <p className="text-red-400">{errors.password ?.message}</p>}
+
             </div>
           </div>
           <div className='space-y-2'>
@@ -79,10 +142,12 @@ const Signup = () => {
                 type='submit'
                 classes='w-full px-8 py-3 font-semibold rounded-md bg-gray-900 hover:bg-gray-700 hover:text-white text-gray-100'
               >
-                Sign up
+                {loading ? <SmallSpinner></SmallSpinner> : "Sign Up"}
               </PrimaryButton>
             </div>
           </div>
+          {signUpError && <p className='text-red-600'>{signUpError}{setLoading(false)}</p>}
+
         </form>
         <div className='flex items-center pt-4 space-x-1'>
           <div className='flex-1 h-px sm:w-16 dark:bg-gray-700'></div>
@@ -92,7 +157,7 @@ const Signup = () => {
           <div className='flex-1 h-px sm:w-16 dark:bg-gray-700'></div>
         </div>
         <div className='flex justify-center space-x-4'>
-          <button aria-label='Log in with Google' className='p-3 rounded-sm'>
+          <button onClick={handleGoogleSingIN} aria-label='Log in with Google' className='p-3 rounded-sm'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 32 32'
